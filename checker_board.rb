@@ -3,28 +3,29 @@ require 'colorize'
 
 class Board
   attr_accessor :grid
-  def initialize
+  
+  def initialize(new_game = true)
  	  @grid = Array.new(8) { Array.new(8) {nil} }
-    #populate
+    if new_game
+      populate
+    end
   end
 
   def populate
   	even_row = [nil, Piece, nil, Piece, nil, Piece, nil, Piece]
   	odd_row = [Piece, nil, Piece, nil, Piece, nil, Piece, nil]
-    [0, 2].each do |row|
-	    even_row.each_with_index do |klass, col| 
-        @grid[row][col] = klass.new([row, col], :red, self) unless klass.nil?
-      end
-    end
-    odd_row.each_with_index do |klass, col| 
-      @grid[1][col] = klass.new([1, col], :red, self) unless klass.nil?
-    end
-    even_row.each_with_index do |klass, col| 
-      @grid[6][col] = klass.new([4, col], :white, self) unless klass.nil?
-    end
-    [5, 7].each do |row|
-      odd_row.each_with_index do |klass, col| 
-        @grid[row][col] = klass.new([row, col], :white, self) unless klass.nil?
+    starting_rows = { :red => [0, 1, 2], :white => [5, 6, 7] }
+    starting_rows.each_pair do |color, rows|
+      rows.each do |row|
+        if row % 2 == 0
+	        even_row.each_with_index do |klass, col| 
+            populate_square(klass, [row, col], color)
+          end
+        else
+          odd_row.each_with_index do |klass, col| 
+            populate_square(klass, [row, col], color)
+          end
+        end
       end
     end
   end
@@ -32,7 +33,7 @@ class Board
   def display
     @grid.each_with_index do |row, row_idx|
       row.each_with_index do |square, col_idx| 
-        print background_color(row_idx, col_idx, display_square(square))
+        print make_square(row_idx, col_idx, display_square(square))
       end
       print "\n"
     end
@@ -40,12 +41,12 @@ class Board
   
   def display_square(square)
     return '   ' if square.nil?
-    square.color.to_s[0..2]
+    square.display
   end
   
-  def background_color(row, col, val)
-    return val.colorize(:background => :green) if (row + col) % 2 == 1
-    val
+  def make_square(row, col, val)
+    return val.colorize(:background => :black) if (row + col) % 2 == 1
+    val.colorize(:background => :red)
   end
   
   def [](pos)
@@ -57,15 +58,37 @@ class Board
 	row, col = pos
 	@grid[row][col] = val
   end
+  
+  def populate_square(klass, pos, color)
+    self[pos] = klass.new(pos, color, self) unless klass.nil?
+  end
+  
+  def pieces
+    @grid.flatten.select { |square| !square.nil? }
+  end
+  
+  def over?
+    pieces.all? { |piece| piece.color == :red } || 
+      pieces.all? { |piece| piece.color == :white}
+  end
+  
+  def winner
+    puts "The #{pieces[0].color} player wins!"
+  end
+  
+  def each(&prc)
+    grid.each_with_index do |row, r_idx|
+      row.each_index do |square|
+        prc.call([r_idx, square])
+      end
+    end
+  end
+  
+  def dup
+    dup_board = Board.new(false)
+    pieces.each do |piece|
+      dup_board[piece.pos] = Piece.new(piece.pos, piece.color, dup_board)
+    end
+    dup_board
+  end
 end
-
-a = Board.new
-p = Piece.new([6, 1], :red, a)
-a[[6, 1]] = p
-p.perform_slide([7, 0])
-p p.king
-a[[6, 1]] = Piece.new([6, 1], :white, a)
-a.display
-p.perform_jump([5, 2])
-puts " "
-a.display
