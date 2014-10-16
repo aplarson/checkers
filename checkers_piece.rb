@@ -1,5 +1,3 @@
-require_relative 'checker_board'
-
 class Piece
   attr_reader :color, :board
   attr_accessor :pos
@@ -20,7 +18,9 @@ class Piece
   end
 
   def perform_slide(pos_to)
-  	if move_diffs.any? { |diff| pos_to == [pos[0] + diff[0], pos[1] + diff[1]]}
+  	if slideable?(pos_to)
+      board[self.pos] = nil
+      board[pos_to] = self
   	  self.pos = pos_to
   	else
   		raise "Can't move there"
@@ -29,7 +29,12 @@ class Piece
 
   def perform_jump(pos_to)
   	if jumpable?(pos_to)
+      board[pos_jumped(self.pos, pos_to)] = nil
+      board[self.pos] = nil
+      board[pos_to] = self
       self.pos = pos_to
+    else
+      raise "Can't move there"
     end
   end
 
@@ -40,15 +45,26 @@ class Piece
   def promote
   	@king = true
   end
-
-  def display
-  	[color, pos].to_s
+  
+  def jumpable?(pos_to)
+    move_diffs.any? do |diff|
+      board[pos_to].nil? &&
+      pos_to == [pos[0] + (2 * diff[0]), pos[1] + (2 * diff[1])] &&
+      !board[pos_jumped(self.pos, pos_to)].nil? &&
+      board[pos_jumped(self.pos, pos_to)].color == enemy_color
+    end
   end
   
-  def jumpable?(pos)
-  	jumped_pos = 
-  	move_diffs.any? { |diff| pos_to == [pos[0] + (2 * diff[0]), pos[1] + (2 * diff[1])] } && board[pos].nil? && 
-  	  board[pos].color != self.color
+  def pos_jumped(pos_from, pos_to)
+    [(pos_from[0] + pos_to[0]) / 2, (pos_from[1] + pos_to[1]) / 2]
   end
-
+  
+  def slideable?(pos_to)
+    board[pos_to].nil? && 
+      move_diffs.any? { |diff| pos_to == [pos[0] + diff[0], pos[1] + diff[1]]}
+  end
+  
+  def enemy_color
+    color == :white ? :red : :white
+  end
 end
