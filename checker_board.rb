@@ -44,7 +44,7 @@ class Board
   end
   
   def background_color(row, col, val)
-    return val.colorize(:background => :light_black) if (row + col) % 2 == 1
+    return val.colorize(:background => :green) if (row + col) % 2 == 1
     val
   end
   
@@ -61,7 +61,6 @@ end
 
 a = Board.new
 a.display
-p a[[3, 0]]
 a[[2, 1]].perform_slide([3, 0])
 puts " "
 a.display
