@@ -5,7 +5,7 @@ class Board
   attr_accessor :grid
   def initialize
  	  @grid = Array.new(8) { Array.new(8) {nil} }
-    populate
+    #populate
   end
 
   def populate
@@ -60,13 +60,12 @@ class Board
 end
 
 a = Board.new
+p = Piece.new([6, 1], :red, a)
+a[[6, 1]] = p
+p.perform_slide([7, 0])
+p p.king
+a[[6, 1]] = Piece.new([6, 1], :white, a)
 a.display
-a[[2, 1]].perform_slide([3, 0])
-puts " "
-a.display
-a[[5, 2]].perform_slide([4, 1])
-puts " "
-a.display
-a[[1, 0]].perform_jump([3, 2])
+p.perform_jump([5, 2])
 puts " "
 a.display

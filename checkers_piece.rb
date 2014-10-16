@@ -1,5 +1,5 @@
 class Piece
-  attr_reader :color, :board
+  attr_reader :color, :board, :king
   attr_accessor :pos
 
   def initialize(pos, color, board)
@@ -22,6 +22,7 @@ class Piece
       board[self.pos] = nil
       board[pos_to] = self
   	  self.pos = pos_to
+      promote if promotable?
   	else
   		raise "Can't move there"
   	end
@@ -33,12 +34,15 @@ class Piece
       board[self.pos] = nil
       board[pos_to] = self
       self.pos = pos_to
+      promote if promotable?
     else
       raise "Can't move there"
     end
   end
-
-  def promote?
+  
+  private
+  
+  def promotable?
   	color == :white ? pos[0] == 0 : pos[0] == 7
   end
 
