@@ -67,7 +67,7 @@ class Board
     @grid.flatten.select { |square| !square.nil? }
   end
   
-  def over?
+  def won?
     pieces.all? { |piece| piece.color == :red } || 
       pieces.all? { |piece| piece.color == :white}
   end
@@ -90,5 +90,11 @@ class Board
       dup_board[piece.pos] = piece.dup(dup_board)
     end
     dup_board
+  end
+  
+  def without_moves?(color)
+    pieces.select do |piece| 
+      piece.color == color
+    end.all? { |piece| !(piece.can_jump? || piece.can_slide?) }
   end
 end

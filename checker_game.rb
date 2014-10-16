@@ -4,8 +4,8 @@ class Game
   attr_accessor :active_player
   attr_reader :board, :white_player, :red_player
   
-  def initialize
-    @board = Board.new
+  def initialize(new_game = true)
+    @board = Board.new(new_game)
     @red_player = HumanPlayer.new(:red)
     @white_player = HumanPlayer.new(:white)
     @active_player = :white
@@ -33,11 +33,19 @@ class Game
   end
   
   def play
-    until board.over?
+    until board.won? || board.without_moves?(@active_player)
       turn
     end
     board.display
-    board.winner
+    if board.won?
+      board.winner
+    else
+      draw
+    end
+  end
+  
+  def draw
+    puts "The game is a draw"
   end
   
 end

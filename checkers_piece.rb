@@ -76,8 +76,6 @@ class Piece
     Piece.new(pos, color, dup_board, king)
   end
   
-  protected
-  
   def jumpable?(pos_to)
     move_diffs.any? do |diff|
       on_board?(pos_to) &&
@@ -97,6 +95,19 @@ class Piece
       return true if jumpable?(square)
     end
     false
+  end
+  
+  def can_slide?
+    board.each do |square| 
+      return true if slideable?(square)
+    end
+    false
+  end
+  
+  def slideable?(pos_to)
+    on_board?(pos_to) &&
+      board[pos_to].nil? && 
+      move_diffs.any? { |diff| pos_to == [pos[0] + diff[0], pos[1] + diff[1]]}
   end
   
   private
@@ -131,12 +142,6 @@ class Piece
 
   def promote
   	@king = true
-  end
-  
-  def slideable?(pos_to)
-    on_board?(pos_to) &&
-      board[pos_to].nil? && 
-      move_diffs.any? { |diff| pos_to == [pos[0] + diff[0], pos[1] + diff[1]]}
   end
   
   def on_board?(pos)
