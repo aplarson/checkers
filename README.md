@@ -1,0 +1,1 @@
+Solo checkers project
