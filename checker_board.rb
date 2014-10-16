@@ -87,7 +87,7 @@ class Board
   def dup
     dup_board = Board.new(false)
     pieces.each do |piece|
-      dup_board[piece.pos] = Piece.new(piece.pos, piece.color, dup_board)
+      dup_board[piece.pos] = piece.dup(dup_board)
     end
     dup_board
   end

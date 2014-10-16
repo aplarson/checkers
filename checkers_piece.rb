@@ -1,14 +1,15 @@
 # encoding: utf-8
+require 'debugger'
 
 class Piece
   attr_reader :color, :board, :king
   attr_accessor :pos
 
-  def initialize(pos, color, board)
+  def initialize(pos, color, board, king = false)
   	@pos = pos
   	@color = color
   	@board = board
-  	@king = false
+  	@king = king
   end
   
   def perform_moves!(move_sequence)
@@ -26,7 +27,6 @@ class Piece
       board[self.pos] = nil
       board[pos_to] = self
   	  self.pos = pos_to
-      promote if promotable?
   	else
   		raise IllegalMoveError
   	end
@@ -38,7 +38,6 @@ class Piece
       board[self.pos] = nil
       board[pos_to] = self
       self.pos = pos_to
-      promote if promotable?
     else
       raise IllegalMoveError
     end
@@ -46,10 +45,12 @@ class Piece
   
   def valid_move_seq?(move_seq)
     dup_board = board.dup
+    jumping = true if jump?(move_seq[0])
     begin
       dup_mover = dup_board[pos]
-    raise IllegalMoveError if !jump?(move_seq[0]) && friendly_jumps?
+    raise IllegalMoveError if !jumping && friendly_jumps?
       dup_mover.perform_moves!(move_seq)
+    raise IllegalMoveError if jumping && dup_mover.can_jump?
     rescue IllegalMoveError
       puts "You can't move there"
       return false
@@ -60,14 +61,19 @@ class Piece
   def perform_moves(move_seq)
     raise IllegalMoveError unless valid_move_seq?(move_seq)
     perform_moves!(move_seq)
+    promote if promotable?
   end
   
   def display
     if @king
       " ♔ ".colorize(:color => self.color)
     else
-      " O ".colorize(:color => self.color)
+      " ⚙ ".colorize(:color => self.color)
     end
+  end
+  
+  def dup(dup_board)
+    Piece.new(pos, color, dup_board, king)
   end
   
   protected
@@ -90,6 +96,7 @@ class Piece
     board.each do |square| 
       return true if jumpable?(square)
     end
+    false
   end
   
   private
@@ -108,9 +115,9 @@ class Piece
   
   def move_diffs
   	if @king
-  		[[1, 1], [1, -1], [-1, -1], [-1, 1]]
+  		WHITE_MOVES + RED_MOVES
   	else
-  		color == :white ? [[-1, 1], [-1, -1]] : [[1, -1], [1, 1]]
+  		color == :white ? WHITE_MOVES : RED_MOVES
   	end
   end
   
@@ -136,6 +143,8 @@ class Piece
     (0..7).cover?(pos[0]) && (0..7).cover?(pos[1])
   end
   
+  WHITE_MOVES = [[-1, 1], [-1, -1]]
+  RED_MOVES = [[1, 1], [1, -1]]
 
 end
 
