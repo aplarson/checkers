@@ -10,7 +10,73 @@ class Board
       populate
     end
   end
+  
+  def [](pos)
+	row, col = pos
+	@grid[row][col]
+  end
 
+  def []=(pos, val)
+	row, col = pos
+	@grid[row][col] = val
+  end
+
+  def display
+    @grid.each_with_index do |row, row_idx|
+      row.each_with_index do |square, col_idx| 
+        print make_square(row_idx, col_idx, display_square(square))
+      end
+      print "\n"
+    end
+  end
+
+  def each(&prc)
+    grid.each_with_index do |row, r_idx|
+      row.each_index do |square|
+        prc.call([r_idx, square])
+      end
+    end
+  end
+  
+  def dup
+    dup_board = Board.new(false)
+    pieces.each do |piece|
+      dup_board[piece.pos] = piece.dup(dup_board)
+    end
+    dup_board
+  end
+  
+  def pieces
+    @grid.flatten.select { |square| !square.nil? }
+  end
+  
+  def winner
+    puts "The #{pieces[0].color} player wins!"
+  end
+  
+  def without_moves?(color)
+    pieces.select do |piece| 
+      piece.color == color
+    end.all? { |piece| !(piece.can_jump? || piece.can_slide?) }
+  end
+  
+  def won?
+    pieces.all? { |piece| piece.color == :red } || 
+      pieces.all? { |piece| piece.color == :white}
+  end
+
+  private
+  
+  def display_square(square)
+    return '   ' if square.nil?
+    square.display
+  end
+  
+  def make_square(row, col, val)
+    return val.colorize(:background => :black) if (row + col) % 2 == 1
+    val.colorize(:background => :red)
+  end
+  
   def populate
   	even_row = [nil, Piece, nil, Piece, nil, Piece, nil, Piece]
   	odd_row = [Piece, nil, Piece, nil, Piece, nil, Piece, nil]
@@ -29,72 +95,8 @@ class Board
       end
     end
   end
-
-  def display
-    @grid.each_with_index do |row, row_idx|
-      row.each_with_index do |square, col_idx| 
-        print make_square(row_idx, col_idx, display_square(square))
-      end
-      print "\n"
-    end
-  end
-  
-  def display_square(square)
-    return '   ' if square.nil?
-    square.display
-  end
-  
-  def make_square(row, col, val)
-    return val.colorize(:background => :black) if (row + col) % 2 == 1
-    val.colorize(:background => :red)
-  end
-  
-  def [](pos)
-	row, col = pos
-	@grid[row][col]
-  end
-
-  def []=(pos, val)
-	row, col = pos
-	@grid[row][col] = val
-  end
   
   def populate_square(klass, pos, color)
     self[pos] = klass.new(pos, color, self) unless klass.nil?
-  end
-  
-  def pieces
-    @grid.flatten.select { |square| !square.nil? }
-  end
-  
-  def won?
-    pieces.all? { |piece| piece.color == :red } || 
-      pieces.all? { |piece| piece.color == :white}
-  end
-  
-  def winner
-    puts "The #{pieces[0].color} player wins!"
-  end
-  
-  def each(&prc)
-    grid.each_with_index do |row, r_idx|
-      row.each_index do |square|
-        prc.call([r_idx, square])
-      end
-    end
-  end
-  
-  def dup
-    dup_board = Board.new(false)
-    pieces.each do |piece|
-      dup_board[piece.pos] = piece.dup(dup_board)
-    end
-    dup_board
-  end
-  
-  def without_moves?(color)
-    pieces.select do |piece| 
-      piece.color == color
-    end.all? { |piece| !(piece.can_jump? || piece.can_slide?) }
   end
 end

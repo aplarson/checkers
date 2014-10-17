@@ -43,21 +43,6 @@ class Piece
     end
   end
   
-  def valid_move_seq?(move_seq)
-    dup_board = board.dup
-    jumping = true if jump?(move_seq[0])
-    begin
-      dup_mover = dup_board[pos]
-    raise IllegalMoveError if !jumping && friendly_jumps?
-      dup_mover.perform_moves!(move_seq)
-    raise IllegalMoveError if jumping && dup_mover.can_jump?
-    rescue IllegalMoveError
-      puts "You can't move there"
-      return false
-    end
-    true
-  end
-  
   def perform_moves(move_seq)
     raise IllegalMoveError unless valid_move_seq?(move_seq)
     perform_moves!(move_seq)
@@ -75,14 +60,11 @@ class Piece
   def dup(dup_board)
     Piece.new(pos, color, dup_board, king)
   end
-  
+
   def jumpable?(pos_to)
     move_diffs.any? do |diff|
-      on_board?(pos_to) &&
-        board[pos_to].nil? &&
-        pos_to == [pos[0] + (2 * diff[0]), pos[1] + (2 * diff[1])] &&
-        !board[pos_jumped(self.pos, pos_to)].nil? &&
-        board[pos_jumped(self.pos, pos_to)].color == enemy_color
+      on_board?(pos_to) && board[pos_to].nil? && 
+        jump_path?(pos_to, diff)
     end
   end
   
@@ -96,22 +78,21 @@ class Piece
     end
     false
   end
-  
+
   def can_slide?
     board.each do |square| 
       return true if slideable?(square)
     end
     false
   end
-  
+
   def slideable?(pos_to)
-    on_board?(pos_to) &&
-      board[pos_to].nil? && 
-      move_diffs.any? { |diff| pos_to == [pos[0] + diff[0], pos[1] + diff[1]]}
+    on_board?(pos_to) && board[pos_to].nil? &&
+      move_diffs.any? {|diff| pos_to == [pos[0] + diff[0], pos[1] + diff[1]] }
   end
-  
+
   private
-  
+
   def enemy_color
     color == :white ? :red : :white
   end
@@ -122,6 +103,12 @@ class Piece
       return true if friendlies.any? { |piece| piece.jumpable?(square) }
     end
     false
+  end
+  
+  def jump_path?(pos_to, diff)
+    pos_to == [pos[0] + (2 * diff[0]), pos[1] + (2 * diff[1])] &&
+      !board[pos_jumped(self.pos, pos_to)].nil? && 
+      board[pos_jumped(self.pos, pos_to)].color == enemy_color
   end
   
   def move_diffs
@@ -148,10 +135,23 @@ class Piece
     (0..7).cover?(pos[0]) && (0..7).cover?(pos[1])
   end
   
+  def valid_move_seq?(move_seq)
+    dup_board = board.dup
+    jumping = true if jump?(move_seq[0])
+    begin
+      dup_mover = dup_board[pos]
+    raise IllegalMoveError if !jumping && friendly_jumps?
+      dup_mover.perform_moves!(move_seq)
+    raise IllegalMoveError if jumping && dup_mover.can_jump?
+    rescue IllegalMoveError
+      puts "You can't move there"
+      return false
+    end
+    true
+  end
+  
   WHITE_MOVES = [[-1, 1], [-1, -1]]
   RED_MOVES = [[1, 1], [1, -1]]
 
 end
 
-class IllegalMoveError < StandardError
-end

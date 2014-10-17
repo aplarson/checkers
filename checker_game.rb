@@ -4,12 +4,21 @@ class Game
   attr_accessor :active_player
   attr_reader :board, :white_player, :red_player
   
-  def initialize(new_game = true)
-    @board = Board.new(new_game)
+  def initialize
+    @board = Board.new
     @red_player = HumanPlayer.new(:red)
     @white_player = HumanPlayer.new(:white)
     @active_player = :white
   end
+  
+  def play
+    until board.won? || board.without_moves?(@active_player)
+      turn
+    end
+    end_game
+  end
+  
+  private
   
   def turn
     begin
@@ -24,18 +33,7 @@ class Game
     switch_player
   end
   
-  def switch_player
-    @active_player = (@active_player == :white ? :red : :white)
-  end
-  
-  def get_move(color)
-    color == :white ? white_player.move : red_player.move
-  end
-  
-  def play
-    until board.won? || board.without_moves?(@active_player)
-      turn
-    end
+  def end_game
     board.display
     if board.won?
       board.winner
@@ -44,8 +42,12 @@ class Game
     end
   end
   
-  def draw
-    puts "The game is a draw"
+  def switch_player
+    @active_player = (@active_player == :white ? :red : :white)
+  end
+  
+  def get_move(color)
+    color == :white ? white_player.move : red_player.move
   end
   
 end
@@ -69,6 +71,9 @@ class HumanPlayer
     raise IllegalMoveError if moves.any? { |move| move.length != 2 }
     [piece, moves]
   end
+end
+
+class IllegalMoveError < StandardError
 end
 
 Game.new.play
