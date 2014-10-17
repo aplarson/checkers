@@ -63,8 +63,7 @@ class Piece
 
   def jumpable?(pos_to)
     move_diffs.any? do |diff|
-      on_board?(pos_to) && board[pos_to].nil? && 
-        jump_path?(pos_to, diff)
+      on_board?(pos_to) && board[pos_to].nil? && jump_path?(pos_to, diff)
     end
   end
   
